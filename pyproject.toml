@@ -1,0 +1,74 @@
+[project]
+name = "synclane"
+version = "0.0.1"
+description = "WIP Python backend <-> typescript frontend connector"
+authors = [
+  {email = "nikita.almakov@gmail.com", name = "Nikita Almakov"},
+]
+maintainers = [
+  {email = "nikita.almakov@gmail.com", name = "Nikita Almakov"},
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.7"
+
+dependencies = [
+    'pydantic >= 2',
+]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov", "pytest-benchmark"]
+lint = [
+    "black",
+    "flake8",
+    "isort",
+    "mypy",
+    "pylint",
+]
+build = [
+    "hatch",
+]
+doc = [
+    "markdown-include",
+    "mdx-truly-sane-lists",
+    "mkdocs",
+    "mkdocs-exclude",
+    "mkdocs-material",
+    "pygments",
+    "pymdown-extensions",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.sources]
+"src/synclane" = "synclane"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src"]
+
+[tool.black]
+line-length = 79
+target-version = ['py39']
+
+[tool.isort]
+atomic = true
+force_grid_wrap = 0
+include_trailing_comma = true
+indent = '    '
+known_first_party = 'convtools'
+line_length = 79
+lines_after_imports = 2
+lines_between_types = 0
+multi_line_output = 3
+order_by_type = true
+use_parentheses = true
+src_paths = ["src", "tests"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov synclane --cov-report term-missing --cov-report xml --verbose"
+testpaths = [
+    "tests",
+]

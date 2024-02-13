@@ -1,0 +1,8 @@
+__pycache__
+generated*.ts
+coverage.xml
+tags
+.coverage
+.notes
+.s.vim
+dist/
