@@ -45,6 +45,6 @@ def check_ts(ts_file):
         TSC_EXECUTABLE_CHECKED = True
 
     completed_process = subprocess.run(
-        f"tsc --strict --noEmit {ts_file}", shell=True
+        f"tsc --lib es2015,dom --strict --noEmit {ts_file}", shell=True
     )
     return completed_process.returncode == 0

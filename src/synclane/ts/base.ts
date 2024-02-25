@@ -25,18 +25,22 @@ class AbortableRequest<T> {
     }
 }
 let REQUEST_COUNTER = 1;
-async function fetchAndPrepare<U>(
+function fetchAndPrepare<U>(
     url: string,
     init: RequestInit,
     primitiveToResult: (data: any) => U
 ): Promise<U> {
-    let response = await fetch(url, init);
-    let data = await response.json();
-    if (data.result === undefined) {
-        throw data.error;
-    }
-    return primitiveToResult(data.result);
-
+    return new Promise((resolve, reject) => {
+        fetch(url, init)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.result === undefined) {
+                    reject(data.error);
+                } else {
+                    resolve(primitiveToResult(data.result));
+                }
+            })
+    });
 }
 export function abortableFetch<T, U>(
     method: string,
