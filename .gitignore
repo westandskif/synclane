@@ -6,3 +6,5 @@ tags
 .notes
 .s.vim
 dist/
+node_modules/
+tests/int_tst_fastapi/src

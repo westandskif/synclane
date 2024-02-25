@@ -24,7 +24,22 @@ class AbortableRequest<T> {
         this.controller = controller;
     }
 }
+let REQUEST_COUNTER = 1;
+async function fetchAndPrepare<U>(
+    url: string,
+    init: RequestInit,
+    primitiveToResult: (data: any) => U
+): Promise<U> {
+    let response = await fetch(url, init);
+    let data = await response.json();
+    if (data.result === undefined) {
+        throw data.error;
+    }
+    return primitiveToResult(data.result);
+
+}
 export function abortableFetch<T, U>(
+    method: string,
     params: T,
     rpcContext: RpcContext,
     paramsToPrimitive: (params: T) => any,
@@ -38,7 +53,11 @@ export function abortableFetch<T, U>(
             "Content-Type": "application/json;charset=UTF-8",
         },
         signal: controller.signal,
-        body: JSON.stringify(paramsToPrimitive(params)),
+        body: JSON.stringify({
+            id: REQUEST_COUNTER++,
+            method: method,
+            params: paramsToPrimitive(params)
+        }),
     };
 
     init.signal = controller.signal;
@@ -47,7 +66,7 @@ export function abortableFetch<T, U>(
     }
 
     return new AbortableRequest<U>(
-        fetch(rpcContext.url, init).then((response) => response.json()).then(primitiveToResult),
+        fetchAndPrepare(rpcContext.url, init, primitiveToResult),
         controller,
     );
 }

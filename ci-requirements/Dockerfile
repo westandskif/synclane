@@ -4,8 +4,8 @@ ARG PY_VERSION="3.6"
 
 RUN pip install -U pip
 
-RUN mkdir -p /mnt/convtools
-COPY requirements$PY_VERSION.out /mnt/convtools/
-RUN pip install -r "/mnt/convtools/requirements$PY_VERSION.out"
+RUN mkdir -p /mnt/synclane
+COPY requirements$PY_VERSION.out /mnt/synclane/
+RUN pip install -r "/mnt/synclane/requirements$PY_VERSION.out"
 
-WORKDIR /mnt/convtools
+WORKDIR /mnt/synclane

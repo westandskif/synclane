@@ -115,7 +115,11 @@ class AbstractRpc(abc.ABC):
     def call(self, raw_data, context):
         request_id = None
         try:
-            rpc_request = RpcRequest.model_validate(raw_data)
+            rpc_request = (
+                RpcRequest.model_validate_json(raw_data)
+                if isinstance(raw_data, (str, bytes, bytearray))
+                else RpcRequest.model_validate(raw_data)
+            )
             request_id = rpc_request.id
             if rpc_request.method not in self.procedures:
                 return {

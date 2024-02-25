@@ -31,7 +31,7 @@ if sys.version_info[0:2] <= (3, 9):
 
 else:
 
-    from types import UnionType
+    from types import NoneType, UnionType
 
     def is_union(type_):
         return (
@@ -155,7 +155,7 @@ return data;
 
             function_defs.append(
                 """export function call%(ts_name)s(params: %(in_type_def)s): AbortableRequest<%(out_type_def)s> {
-    return abortableFetch<%(in_type_def)s, %(out_type_def)s>(params, RPC_CONTEXT, _%(ts_name)sParamsToPrimitive, _%(ts_name)sPrimitiveToResult);
+    return abortableFetch<%(in_type_def)s, %(out_type_def)s>("%(ts_name)s", params, RPC_CONTEXT, _%(ts_name)sParamsToPrimitive, _%(ts_name)sPrimitiveToResult);
 }"""
                 % {
                     "in_type_def": in_type_def,
@@ -185,6 +185,10 @@ return data;
             yield code
 
     def write(self, filename):
+        dir_name = os.path.dirname(filename)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+
         with open(filename, "w") as f:
             for piece in self.to_code_pieces():
                 f.write(piece)
