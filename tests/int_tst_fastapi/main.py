@@ -95,8 +95,15 @@ class GetUser2(AbstractProcedure):
 
 rpc = Rpc().register(GetUser, GetUser2)
 
+
+class CustomRpcContext(RpcContext):
+    custom: int
+
+
 ############# EXPORTING TS ######################
-TsExporter(rpc, RpcContext(url="http://backend:8000")).write("src/out.ts")
+TsExporter(rpc, CustomRpcContext(url="http://backend:8000", custom=2)).write(
+    "src/out.ts"
+)
 
 
 app = FastAPI()

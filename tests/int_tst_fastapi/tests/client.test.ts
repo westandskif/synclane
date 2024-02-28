@@ -2,13 +2,15 @@ import {
     callGetUser,
     callGetUser2,
     AccessLevel,
+    rpcConfig,
     RPC_CONTEXT,
 } from "../src/out";
 
 test("API client", async () => {
+    expect(RPC_CONTEXT.custom).toEqual(2);
     let start_ts = new Date();
     let dob = new Date(2000, 0, 1);
-    RPC_CONTEXT.initFetch = (init: RequestInit) => {
+    rpcConfig.initFetch = (init: RequestInit) => {
         let headers = (init.headers = init.headers || {});
         headers["X-Jwt-Token"] = "secret";
         return init;
@@ -47,7 +49,7 @@ test("API client", async () => {
         ],
     });
 
-    RPC_CONTEXT.initFetch = (init: RequestInit) => {
+    rpcConfig.initFetch = (init: RequestInit) => {
         let headers = (init.headers = init.headers || {});
         headers["X-Jwt-Token"] = "secret-bad";
         return init;
