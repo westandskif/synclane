@@ -6,3 +6,4 @@ source = convtools
 exclude_lines =
     raise NotImplementedError
     pass
+    pragma: no cover

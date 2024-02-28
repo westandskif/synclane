@@ -1,15 +1,32 @@
-import json
-
-import pytest
-from pydantic import BaseModel, ValidationError
 import subprocess
 
-from synclane import AbstractProcedure, AbstractRpc, ProcedureNotFound
+import pytest
+from pydantic import ValidationError
+
+from synclane import AbstractAsyncRpc, AbstractRpc
 
 
 @pytest.fixture
 def rpc_cls():
     class Rpc(AbstractRpc):
+        def prepare_exception(self, raw_data, context, exc):
+            if isinstance(exc, ValidationError):
+                return {
+                    "code": -32600,
+                    "message": "Validation error",
+                    "details": exc.errors(
+                        include_url=False,
+                        include_context=True,
+                        include_input=True,
+                    ),
+                }
+
+    return Rpc
+
+
+@pytest.fixture
+def rpc_async_cls():
+    class Rpc(AbstractAsyncRpc):
         def prepare_exception(self, raw_data, context, exc):
             if isinstance(exc, ValidationError):
                 return {
@@ -32,6 +49,15 @@ def dumb_rpc_cls():
             pass
 
     return Rpc
+
+
+@pytest.fixture
+def dumb_async_rpc_cls():
+    class AsyncRpc(AbstractAsyncRpc):
+        def prepare_exception(self, raw_data, context, exc):
+            pass
+
+    return AsyncRpc
 
 
 TSC_EXECUTABLE_CHECKED = False

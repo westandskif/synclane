@@ -1,10 +1,24 @@
+import logging
+import sys
 from datetime import date, datetime
 from enum import Enum
+from typing import List
 
 from fastapi import FastAPI, Request
 from pydantic import BaseModel, ValidationError, constr
 
-from synclane import AbstractProcedure, AbstractRpc, RpcContext, TsExporter
+from synclane import (
+    AbstractAsyncProcedure,
+    AbstractAsyncRpc,
+    AbstractProcedure,
+    AbstractRpc,
+    RpcContext,
+    TsExporter,
+)
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 ######## ERROR HANDLING #########################
@@ -17,7 +31,7 @@ def is_authorized(context):
         raise UnauthorizedError
 
 
-class Rpc(AbstractRpc):
+class Rpc(AbstractAsyncRpc):
     def prepare_exception(self, raw_data, context, exc):
         if isinstance(exc, ValidationError):
             return {
@@ -34,6 +48,7 @@ class Rpc(AbstractRpc):
                 "code": -32000,
                 "message": "unauthorized",
             }
+        logger.exception(exc)
         return {
             "code": -1,
             "message": "Internal server error",
@@ -43,7 +58,7 @@ class Rpc(AbstractRpc):
 ############# PROCEDURE #########################
 class UserParams(BaseModel):
     uid: constr(min_length=1)
-    start_ts: datetime
+    start_ts: List[datetime]
     dob: date
 
 
@@ -55,12 +70,21 @@ class AccessLevel(Enum):
 class UserDetails(BaseModel):
     uid: str
     name: str
-    start_ts: datetime
+    start_ts: List[datetime]
     dob: date
     access_level: AccessLevel
 
 
-class GetUser(AbstractProcedure):
+class GetUser(AbstractAsyncProcedure):
+    PERMISSIONS = (is_authorized,)
+
+    async def call_async(self, in_: UserParams, context) -> UserDetails:
+        return UserDetails(
+            name="John", access_level=AccessLevel.BASIC, **in_.dict()
+        )
+
+
+class GetUser2(AbstractProcedure):
     PERMISSIONS = (is_authorized,)
 
     def call(self, in_: UserParams, context) -> UserDetails:
@@ -69,7 +93,7 @@ class GetUser(AbstractProcedure):
         )
 
 
-rpc = Rpc().register(GetUser)
+rpc = Rpc().register(GetUser, GetUser2)
 
 ############# EXPORTING TS ######################
 TsExporter(rpc, RpcContext(url="http://backend:8000")).write("src/out.ts")
@@ -80,4 +104,4 @@ app = FastAPI()
 
 @app.post("/")
 async def read_root(request: Request):
-    return rpc.call(await request.body(), request)
+    return await rpc.call_async(await request.body(), request)

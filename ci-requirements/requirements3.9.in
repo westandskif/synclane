@@ -1,6 +1,7 @@
 pytest
 pytest-cov
 pytest-benchmark
+pytest-asyncio
 
 black
 isort

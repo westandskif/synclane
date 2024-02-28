@@ -5,10 +5,15 @@ from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
 import pytest
 from pydantic import BaseModel, ValidationError, constr
 
-from synclane import AbstractProcedure, AbstractRpc, ProcedureNotFound
+from synclane import (
+    AbstractAsyncProcedure,
+    AbstractProcedure,
+    AbstractRpc,
+    ProcedureNotFound,
+)
 from synclane._export import TsExporter
 
-from .base import dumb_rpc_cls, rpc_cls
+from .base import dumb_rpc_cls, rpc_async_cls, rpc_cls, dumb_async_rpc_cls
 
 
 def test_success(rpc_cls):
@@ -74,6 +79,113 @@ def test_success(rpc_cls):
     # fmt: on
 
 
+@pytest.mark.asyncio
+async def test_async(rpc_async_cls, dumb_async_rpc_cls):
+    class UserParams(BaseModel):
+        uid: str
+
+    class UserDetails(BaseModel):
+        params: List[UserParams]
+        name: str
+
+    def permission1(context):
+        pass
+
+    async def permission2(context):
+        pass
+
+    class GetUser(AbstractAsyncProcedure):
+        PERMISSIONS = (permission1, permission2)
+
+        async def call_async(self, in_: UserParams, context) -> UserDetails:
+            return UserDetails(params=[in_], name="John")
+
+    class GetUser2(AbstractProcedure):
+        PERMISSIONS = (permission1, permission2)
+
+        def call(self, in_: UserParams, context) -> UserDetails:
+            return UserDetails(params=[in_], name="John")
+
+    rpc = rpc_async_cls().register(GetUser, GetUser2)
+
+    result = await rpc.call_async(
+        {
+            "id": 1,
+            "method": "GetUser",
+            "params": {"uid": "7fa8d"},
+        },
+        None,
+    )
+    assert result == {
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": {"name": "John", "params": [{"uid": "7fa8d"}]},
+    }
+    result = await rpc.call_async(
+        {
+            "id": 1,
+            "method": "GetUser2",
+            "params": {"uid": "7fa8d"},
+        },
+        None,
+    )
+    assert result == {
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": {"name": "John", "params": [{"uid": "7fa8d"}]},
+    }
+    result = await rpc.call_async(
+        {
+            "id": 1,
+            "method": "GetUser2",
+            "params": {},
+        },
+        None,
+    )
+    assert result == {
+        "error": {
+            "code": -32600,
+            "details": [
+                {
+                    "input": {},
+                    "loc": ("uid",),
+                    "msg": "Field required",
+                    "type": "missing",
+                }
+            ],
+            "message": "Validation error",
+        },
+        "id": 1,
+        "jsonrpc": "2.0",
+    }
+
+    result = await rpc.call_async(
+        {"id": 1, "method": "missing", "params": None},
+        None,
+    )
+    assert result == {
+        "error": {"code": -32601, "message": "Method not found"},
+        "id": 1,
+        "jsonrpc": "2.0",
+    }
+
+    with pytest.raises(ValidationError):
+        await dumb_async_rpc_cls().register(GetUser2).call_async(
+            {
+                "id": 1,
+                "method": "GetUser2",
+                "params": {},
+            },
+            None,
+        )
+
+    with pytest.raises(TypeError):
+
+        class A(AbstractAsyncProcedure):
+            def call_async(self, in_: UserParams, context) -> UserDetails:
+                return UserDetails(params=[in_], name="John")
+
+
 def test_complex_types(rpc_cls):
     class UserParams(BaseModel):
         uid: str
@@ -103,7 +215,7 @@ def test_complex_types(rpc_cls):
     }
 
 
-def test_exceptions(dumb_rpc_cls):
+def test_exceptions(dumb_rpc_cls, dumb_async_rpc_cls, rpc_cls, rpc_async_cls):
     class UserParams(BaseModel):
         uid: str
 
@@ -115,12 +227,19 @@ def test_exceptions(dumb_rpc_cls):
         def call(self, in_: UserParams, context) -> UserDetails:
             return dict(uid=in_.uid, name="John")
 
-    class GetUser2(AbstractProcedure):
+    class GetUser2(AbstractAsyncProcedure):
         @staticmethod
-        def call(in_: UserParams, context) -> UserDetails:
+        async def call_async(in_: UserParams, context) -> UserDetails:
             return dict(uid=in_.uid, name="John")
 
-    rpc = dumb_rpc_cls().register(GetUser, GetUser2)
+    rpc = dumb_rpc_cls().register(GetUser)
+    async_rpc = rpc_async_cls().register(GetUser)
+
+    with pytest.raises(ValueError):
+        rpc.register(GetUser)
+    with pytest.raises(ValueError):
+        async_rpc.register(GetUser)
+
     with pytest.raises(ValidationError):
         result = rpc.call(
             {
@@ -130,6 +249,14 @@ def test_exceptions(dumb_rpc_cls):
             },
             None,
         )
+
+    for p in (GetUser2, bool):
+        with pytest.raises(TypeError):
+            rpc.register(p)
+
+    with pytest.raises(TypeError):
+        async_rpc.register(bool)
+
     result = rpc.call(
         {
             "id": 1,
@@ -142,19 +269,6 @@ def test_exceptions(dumb_rpc_cls):
         "id": 1,
         "jsonrpc": "2.0",
         "result": {"name": "John", "uid": "7fa8d"},
-    }
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "GetUser2",
-            "params": {"uid": "78d"},
-        },
-        None,
-    )
-    assert result == {
-        "id": 1,
-        "jsonrpc": "2.0",
-        "result": {"name": "John", "uid": "78d"},
     }
 
     class GetBad(AbstractProcedure):
@@ -234,3 +348,15 @@ def test_exceptions(dumb_rpc_cls):
             @staticmethod
             def call() -> dict:
                 return {}
+
+    with pytest.raises(TypeError):
+
+        class A(AbstractProcedure):
+            async def call():
+                pass
+
+    with pytest.raises(TypeError):
+
+        class A(AbstractAsyncProcedure):
+            def call_async():
+                pass

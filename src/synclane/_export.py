@@ -31,9 +31,9 @@ if sys.version_info[0:2] <= (3, 9):
 
 else:
 
-    from types import NoneType, UnionType
+    from types import NoneType, UnionType  # pragma: no cover
 
-    def is_union(type_):
+    def is_union(type_):  # pragma: no cover
         return (
             isinstance(type_, UnionType)
             or is_parametrized_generic(type_)
@@ -121,8 +121,6 @@ class BaseTsExporter:
             in_type_def = self.root_type_to_interface(procedure.in_type)
             out_type_def = self.root_type_to_interface(procedure.out_type)
 
-            # TODO CONTINUE
-            # TODO pass method
             prepare_params_defs[ts_name] = (
                 """function _%(ts_name)sParamsToPrimitive(params: %(in_type_def)s): any {
 let preparedParams: any;
@@ -187,7 +185,7 @@ return data;
     def write(self, filename):
         dir_name = os.path.dirname(filename)
         if dir_name:
-            os.makedirs(dir_name, exist_ok=True)
+            os.makedirs(dir_name, exist_ok=True)  # pragma: no cover
 
         with open(filename, "w") as f:
             for piece in self.to_code_pieces():
