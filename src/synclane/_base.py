@@ -1,7 +1,9 @@
+""""Defines base Rpc and Procedure classes."""
+
 import abc
 import asyncio
 import inspect
-from typing import Any
+from typing import Any, Awaitable, Callable, Optional, Sequence, Type
 
 from pydantic import BaseModel, RootModel
 
@@ -14,30 +16,34 @@ class ProcedureNotFound(BaseRpcException):
     pass
 
 
-def ensure_pydantic_model(some_type):
+def ensure_pydantic_model(some_type: Type[Any]):
     return (
-        some_type if issubclass(some_type, BaseModel) else RootModel[some_type]
+        some_type if issubclass(some_type, BaseModel) else RootModel[some_type]  # type: ignore
     )
 
 
 class ProcedureMeta(abc.ABCMeta):
-    def __new__(meta_cls, name, bases, dict_):
-        cls = super().__new__(meta_cls, name, bases, dict_)
+    """Meta class, which creates AbstractProcedure and AbstractAsyncProcedure."""
+
+    name: str
+    in_type: Type[Any]
+    out_type: Type[Any]
+
+    def __new__(mcs, name, bases, dict_):
+        cls = super().__new__(mcs, name, bases, dict_)
         cls.name = name
         if hasattr(cls, "call"):
             if asyncio.iscoroutinefunction(cls.call):
                 raise TypeError(
                     "either make 'call' sync or inherit AbstractAsyncProcedure"
                 )
-            cls.in_type, cls.out_type = meta_cls.get_in_n_out_models(cls.call)
+            cls.in_type, cls.out_type = mcs.get_in_n_out_models(cls.call)
         if hasattr(cls, "call_async"):
             if not asyncio.iscoroutinefunction(cls.call_async):
                 raise TypeError(
                     "either make 'call_async' async or inherit AbstractProcedure"
                 )
-            cls.in_type, cls.out_type = meta_cls.get_in_n_out_models(
-                cls.call_async
-            )
+            cls.in_type, cls.out_type = mcs.get_in_n_out_models(cls.call_async)
         return cls
 
     @staticmethod
@@ -66,7 +72,12 @@ class ProcedureMeta(abc.ABCMeta):
 
 
 class AbstractProcedure(metaclass=ProcedureMeta):
-    PERMISSIONS = ()
+    """Base class of an synchronous RPC procedure."""
+
+    PERMISSIONS: Sequence[Callable[[Any], None]] = ()
+
+    in_type: Type[Any]
+    out_type: Type[Any]
 
     def _call(self, raw_data, context):
         self.check_permissions(context)
@@ -84,7 +95,12 @@ class AbstractProcedure(metaclass=ProcedureMeta):
 
 
 class AbstractAsyncProcedure(metaclass=ProcedureMeta):
-    PERMISSIONS = ()
+    """Base class of an asynchronous RPC procedure."""
+
+    PERMISSIONS: Sequence[Callable[[Any], Optional[Awaitable[Any]]]] = ()
+
+    in_type: Type[Any]
+    out_type: Type[Any]
 
     def __init__(self):
         self._permissions = tuple(
@@ -101,7 +117,7 @@ class AbstractAsyncProcedure(metaclass=ProcedureMeta):
     async def check_permissions(self, context):
         for permission, is_async in self._permissions:
             if is_async:
-                await permission(context)
+                await permission(context)  # type: ignore
             else:
                 permission(context)
 
@@ -118,6 +134,8 @@ class RpcRequest(BaseModel):
 
 
 class AbstractRpc(abc.ABC):
+    """Abstract class of a synchronous RPC service."""
+
     __slots__ = ["procedures"]
 
     def __init__(self):
@@ -159,15 +177,15 @@ class AbstractRpc(abc.ABC):
                     "id": request_id,
                 }
 
-            result = self.procedures[rpc_request.method]._call(
-                rpc_request.params, context
-            )
+            result = self.procedures[  # pylint: disable=protected-access
+                rpc_request.method
+            ]._call(rpc_request.params, context)
             return {
                 "jsonrpc": "2.0",
                 "result": result.model_dump(),
                 "id": request_id,
             }
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             data = self.prepare_exception(raw_data, context, e)
             if data is None:
                 raise
@@ -181,8 +199,16 @@ class AbstractRpc(abc.ABC):
     def prepare_exception(self, raw_data, context, exc):
         raise NotImplementedError
 
+    def ts_dump(self, filename):
+        """Dumps typescript type definitions and client to a file."""
+        from ._export import TsExporter
+
+        return TsExporter(self).write(filename)
+
 
 class AbstractAsyncRpc(abc.ABC):
+    """Abstract class of a asynchronous RPC service."""
+
     __slots__ = ["procedures"]
 
     def __init__(self):
@@ -224,16 +250,22 @@ class AbstractAsyncRpc(abc.ABC):
 
             procedure = self.procedures[rpc_request.method]
             if isinstance(procedure, AbstractAsyncProcedure):
-                result = await procedure._call(rpc_request.params, context)
+                result = (
+                    await procedure._call(  # pylint: disable=protected-access
+                        rpc_request.params, context
+                    )
+                )
             else:
-                result = procedure._call(rpc_request.params, context)
+                result = procedure._call(  # pylint: disable=protected-access
+                    rpc_request.params, context
+                )
             return {
                 "jsonrpc": "2.0",
                 "result": result.model_dump(),
                 "id": request_id,
             }
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             data = self.prepare_exception(raw_data, context, e)
             if data is None:
                 raise
@@ -246,3 +278,9 @@ class AbstractAsyncRpc(abc.ABC):
     @abc.abstractmethod
     def prepare_exception(self, raw_data, context, exc):
         raise NotImplementedError
+
+    def ts_dump(self, filename):
+        """Dumps typescript type definitions and client to a file."""
+        from ._export import TsExporter
+
+        return TsExporter(self).write(filename)

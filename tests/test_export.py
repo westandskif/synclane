@@ -1,17 +1,23 @@
 import json
+import sys
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
 from enum import Enum
+from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 import pytest
 from pydantic import BaseModel, ValidationError, constr
 
-from synclane import AbstractProcedure, AbstractRpc, ProcedureNotFound
+from synclane import (
+    AbstractAsyncProcedure,
+    AbstractProcedure,
+    AbstractRpc,
+    ProcedureNotFound,
+)
 from synclane._export import TsExporter
 
-from .base import check_ts, dumb_rpc_cls, rpc_cls
-import sys
+from .base import check_ts, dumb_rpc_cls, rpc_async_cls, rpc_cls
+
 
 SUPPORTS_NEW_UNION = sys.version_info[0:2] > (3, 9)
 
@@ -123,10 +129,10 @@ def test_complex_export_ts(rpc_cls):
 
     rpc = rpc_cls().register(GetUser)
 
-    assert check_ts(TsExporter(rpc).write("generated_output_complex.ts"))
+    assert check_ts(rpc.ts_dump("generated_output_complex.ts"))
 
 
-def test_simple_export_ts(rpc_cls):
+def test_simple_export_ts(rpc_async_cls):
     class Color(Enum):
         RED = 1
         GREEN = 2
@@ -139,10 +145,10 @@ def test_simple_export_ts(rpc_cls):
     class UserDetails(UserParams):
         age: int
 
-    class GetUser(AbstractProcedure):
-        def call(self, in_: UserParams, context) -> UserDetails:
+    class GetUser(AbstractAsyncProcedure):
+        async def call_async(self, in_: UserParams, context) -> UserDetails:
             pass
 
-    rpc = rpc_cls().register(GetUser)
+    rpc = rpc_async_cls().register(GetUser)
 
-    assert check_ts(TsExporter(rpc).write("generated_output_simple.ts"))
+    assert check_ts(rpc.ts_dump("generated_output_simple.ts"))

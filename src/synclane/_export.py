@@ -1,3 +1,5 @@
+"""Defines exporter to Typescript."""
+
 import abc
 import os
 import sys
@@ -5,9 +7,18 @@ from datetime import date, datetime
 from enum import Enum
 from inspect import isclass
 from itertools import cycle
-from typing import GenericAlias, TypeVar, Union, _GenericAlias
+from typing import (  # type: ignore
+    GenericAlias,
+    MutableMapping,
+    Sequence,
+    TypeVar,
+    Union,
+    _GenericAlias,
+)
 
 from pydantic import BaseModel
+
+from ._base import AbstractAsyncRpc, AbstractRpc
 
 
 _NUMBERS = iter(cycle(range(1000)))
@@ -66,6 +77,8 @@ else:
 
 
 class CodeLines:
+    """Code lines wrapper, keeping track of code with mutations."""
+
     __slots__ = ["lines", "mutate"]
 
     def __init__(self, lines, mutate):
@@ -95,16 +108,20 @@ class CodeLines:
 
 
 class BaseTsExporter:
-    handlers = ()
+    """Exporter to Typescript."""
 
-    def __init__(self, rpc):
+    handlers: "Sequence[TypeHandler]" = ()
+
+    def __init__(self, rpc: Union[AbstractAsyncRpc, AbstractRpc]):
         self.rpc = rpc
-        self.cache = {}
-        self.name_to_interface_def = {}
-        self.name_to_enum_def = {}
+        self.name_to_interface_def: MutableMapping[str, str] = {}
+        self.name_to_enum_def: MutableMapping[str, str] = {}
 
     def to_code_pieces(self):
-        with open(os.path.join(os.path.dirname(__file__), "ts/base.ts")) as f:
+        with open(
+            os.path.join(os.path.dirname(__file__), "ts/base.ts"),
+            encoding="utf-8",
+        ) as f:
             yield f.read()
 
         function_defs = []
@@ -180,7 +197,7 @@ return data;
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)  # pragma: no cover
 
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             for piece in self.to_code_pieces():
                 f.write(piece)
         return filename
@@ -222,6 +239,8 @@ return data;
 
 
 class TypeHandler(metaclass=abc.ABCMeta):
+    """Base type handler to export python types to typescript ones."""
+
     @abc.abstractmethod
     def type_to_interface(self, exporter, type_):
         pass
@@ -236,6 +255,8 @@ class TypeHandler(metaclass=abc.ABCMeta):
 
 
 class SimpleTypeHandler(TypeHandler):
+    """Exports simple python types to typescript ones."""
+
     simple_types = {
         str: "string",
         bool: "boolean",
@@ -261,6 +282,8 @@ class SimpleTypeHandler(TypeHandler):
 
 
 class DateHandler(TypeHandler):
+    """Exports python dates to typescript ones."""
+
     def type_to_interface(self, exporter, type_):
         if not isclass(type_):
             return
@@ -285,6 +308,8 @@ class DateHandler(TypeHandler):
 
 
 class PydanticModelHandler(TypeHandler):
+    """Exports pydantic models to typescript interfaces."""
+
     def _is_supported(self, type_):
         return isclass(type_) and issubclass(type_, BaseModel)
 
@@ -372,6 +397,8 @@ class PydanticModelHandler(TypeHandler):
 
 
 class UnionHandler(TypeHandler):
+    """Exports python union types to typescript ones."""
+
     _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
@@ -422,6 +449,8 @@ class UnionHandler(TypeHandler):
 
 
 class TypeVarHandler(TypeHandler):
+    """Exports python type vars to typescript ones."""
+
     def type_to_interface(self, exporter, type_):
         if isinstance(type_, TypeVar):
             return type_.__name__
@@ -434,6 +463,8 @@ class TypeVarHandler(TypeHandler):
 
 
 class GenericListHandler(TypeHandler):
+    """Exports python generic lists to typescript arrays."""
+
     _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
@@ -493,6 +524,8 @@ class GenericListHandler(TypeHandler):
 
 
 class GenericTupleHandler(TypeHandler):
+    """Exports python generic tuples to typescript arrays."""
+
     _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
@@ -596,6 +629,8 @@ class GenericTupleHandler(TypeHandler):
 
 
 class GenericDictHandler(TypeHandler):
+    """Exports python generic dicts to typescript ones."""
+
     _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
@@ -677,6 +712,8 @@ class GenericDictHandler(TypeHandler):
 
 
 class EnumHandler(TypeHandler):
+    """Exports python enums to typescript ones."""
+
     def _is_supported(self, type_):
         return isclass(type_) and issubclass(type_, Enum)
 

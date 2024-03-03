@@ -38,3 +38,10 @@ test/int-tst-fast-api:
 		&& docker compose build \
 		&& docker compose up frontend \
 		&& docker compose stop
+
+checks:
+	isort src tests
+	black src tests
+	ruff check
+	mypy --check-untyped-defs src
+	pylint src

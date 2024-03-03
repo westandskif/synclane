@@ -1,3 +1,5 @@
+"""Python backend <-> Typescript frontend connection layer."""
+
 from ._base import (
     AbstractAsyncProcedure,
     AbstractAsyncRpc,
@@ -6,3 +8,13 @@ from ._base import (
     ProcedureNotFound,
 )
 from ._export import TsExporter
+
+
+__all__ = [
+    "AbstractAsyncProcedure",
+    "AbstractAsyncRpc",
+    "AbstractProcedure",
+    "AbstractRpc",
+    "ProcedureNotFound",
+    "TsExporter",
+]

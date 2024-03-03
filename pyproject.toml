@@ -72,3 +72,42 @@ addopts = "--cov synclane --cov-report term-missing --cov-report xml --verbose"
 testpaths = [
     "tests",
 ]
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+target-version = "py39"
+
+exclude = ["tests"]
+
+[tool.ruff.lint]
+select = [
+  "A001",
+  "A002",
+  "B",
+  "D",
+  "D100", "D101", "D102", "D103", "D104",
+  "E",
+  "F",
+  "PL",
+  "SIM",
+  # "ANN",
+  # "RUF",
+]
+ignore = [
+  "ANN101",
+  "ANN102",
+  "B904",
+  "E501",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "PLR2004",
+  "SIM105",
+]
+unfixable = ["B"]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

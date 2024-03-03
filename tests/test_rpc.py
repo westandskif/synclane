@@ -13,7 +13,7 @@ from synclane import (
 )
 from synclane._export import TsExporter
 
-from .base import dumb_rpc_cls, rpc_async_cls, rpc_cls, dumb_async_rpc_cls
+from .base import dumb_async_rpc_cls, dumb_rpc_cls, rpc_async_cls, rpc_cls
 
 
 def test_success(rpc_cls):
