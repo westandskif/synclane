@@ -9,7 +9,7 @@ maintainers = [
   {email = "nikita.almakov@gmail.com", name = "Nikita Almakov"},
 ]
 license = "MIT"
-readme = "README.md"
+readme = "docs/README.md"
 requires-python = ">=3.7"
 classifiers = [
 	"Development Status :: 4 - Beta",

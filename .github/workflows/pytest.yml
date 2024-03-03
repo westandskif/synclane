@@ -11,7 +11,11 @@ jobs:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -21,6 +25,7 @@ jobs:
       - name: main python version - 3.9
         if: ${{ matrix.python-version == '3.9' }}
         run: |
+          npm install -D typescript@~5.3
           pip install -r ci-requirements/requirements3.9.out
           pip install -e .
           black src tests --check

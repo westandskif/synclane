@@ -22,9 +22,9 @@ lock-py%:
 test-py%:
 	docker build --build-arg="PY_VERSION=$*" -t ${PROJECT}_$*:latest ci-requirements
 	docker run --rm -it -v $$PWD:/mnt/${PROJECT} ${PROJECT}_$*:latest bash -c \
-		"pip install -e . && pytest"
+		"source ~/.bashrc && pip install -e . && pytest"
 
-test: test-py3.9 test-py3.10
+test: test-py3.7 test-py3.8 test-py3.9 test-py3.10 test-py3.11 test-py3.12
 
 
 lock-int-tst-fast-api-py%:

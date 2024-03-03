@@ -7,14 +7,7 @@ from datetime import date, datetime
 from enum import Enum
 from inspect import isclass
 from itertools import cycle
-from typing import (  # type: ignore
-    GenericAlias,
-    MutableMapping,
-    Sequence,
-    TypeVar,
-    Union,
-    _GenericAlias,
-)
+from typing import MutableMapping, Sequence, TypeVar, Union  # type: ignore
 
 from pydantic import BaseModel
 
@@ -28,10 +21,25 @@ def get_next_number():
     return next(_NUMBERS)
 
 
-def is_parametrized_generic(
-    type_, _generic_types=(GenericAlias, _GenericAlias)
-):
-    return isinstance(type_, _generic_types)
+if sys.version_info[0:2] < (3, 9):
+    from typing import _GenericAlias  # type: ignore # pragma: no cover
+
+    _GENERIC_TYPES = (_GenericAlias,)  # pragma: no cover
+
+    def is_parametrized_generic(
+        type_, _generic_types=(_GenericAlias,)
+    ):  # pragma: no cover
+        return isinstance(type_, _generic_types)
+
+else:
+    from typing import GenericAlias, _GenericAlias  # type: ignore
+
+    _GENERIC_TYPES = (GenericAlias, _GenericAlias)
+
+    def is_parametrized_generic(
+        type_, _generic_types=(GenericAlias, _GenericAlias)
+    ):
+        return isinstance(type_, _generic_types)
 
 
 if sys.version_info[0:2] <= (3, 9):
@@ -415,8 +423,6 @@ class PydanticModelHandler(TypeHandler):
 class UnionHandler(TypeHandler):
     """Exports python union types to typescript ones."""
 
-    _generic_types = (GenericAlias, _GenericAlias)
-
     def _is_supported(self, type_):
         if not is_union(type_):
             return False
@@ -481,8 +487,6 @@ class TypeVarHandler(TypeHandler):
 class GenericListHandler(TypeHandler):
     """Exports python generic lists to typescript arrays."""
 
-    _generic_types = (GenericAlias, _GenericAlias)
-
     def _is_supported(self, type_):
         if is_parametrized_generic(type_) and type_.__origin__ is list:
             args = type_.__args__
@@ -541,8 +545,6 @@ class GenericListHandler(TypeHandler):
 
 class GenericTupleHandler(TypeHandler):
     """Exports python generic tuples to typescript arrays."""
-
-    _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
         if is_parametrized_generic(type_) and type_.__origin__ is tuple:
@@ -646,8 +648,6 @@ class GenericTupleHandler(TypeHandler):
 
 class GenericDictHandler(TypeHandler):
     """Exports python generic dicts to typescript ones."""
-
-    _generic_types = (GenericAlias, _GenericAlias)
 
     def _is_supported(self, type_):
         return is_parametrized_generic(type_) and type_.__origin__ is dict
