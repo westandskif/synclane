@@ -7,7 +7,7 @@ You simply define framework-agnostic RPC object with typing-based validation
 and use automatically generated TypeScript functions to consume it.
 
 [![License](https://img.shields.io/github/license/westandskif/synclane.svg)](https://github.com/westandskif/synclane/blob/master/LICENSE.txt)
-[![codecov](https://codecov.io/gh/westandskif/synclane/branch/master/graph/badge.svg)](https://codecov.io/gh/westandskif/synclane)
+[![codecov](https://codecov.io/gh/westandskif/synclane/graph/badge.svg?token=JL9C46RNGU)](https://codecov.io/gh/westandskif/synclane)
 [![Tests status](https://github.com/westandskif/synclane/workflows/tests/badge.svg)](https://github.com/westandskif/synclane/actions/workflows/pytest.yml)
 [![Docs status](https://readthedocs.org/projects/synclane/badge/?version=latest)](https://synclane.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://badge.fury.io/py/synclane.svg)](https://pypi.org/project/synclane/)
