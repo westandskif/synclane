@@ -20,7 +20,6 @@ use_directory_urls: true
 
 nav:
   - Welcome: README.md
-  - 'Usage / Basics': usage_basics.md
   - Changelog: CHANGELOG.md
   - License: LICENSE.md
 
