@@ -122,4 +122,10 @@ app = FastAPI()
 
 @app.post("/")
 async def read_root(request: Request):
-    return await rpc.call_async(await request.body(), request)
+    # for sync version of rpc:
+    # >>> rpc.call(await request.body(), request)
+
+    return await rpc.call_async(
+        await request.body(),  # always full body as is
+        request,  # anything to be passed to procedures as context
+    )
