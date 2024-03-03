@@ -316,6 +316,12 @@ class PydanticModelHandler(TypeHandler):
     def type_to_interface(self, exporter, type_):
         if not self._is_supported(type_):
             return
+
+        if type_.__pydantic_root_model__:
+            return exporter.root_type_to_interface(
+                type_.model_fields["root"].annotation
+            )
+
         if type_.__pydantic_generic_metadata__["origin"]:
             origin = type_.__pydantic_generic_metadata__["origin"]
             name = exporter.root_type_to_interface(origin)
@@ -353,6 +359,11 @@ class PydanticModelHandler(TypeHandler):
         if not self._is_supported(type_):
             return
 
+        if type_.__pydantic_root_model__:
+            return exporter.root_ts_to_primitive(
+                type_.model_fields["root"].annotation, src, dest
+            )
+
         code_lines = CodeLines(
             [f"{dest} = {{}}"],
             False,
@@ -371,6 +382,11 @@ class PydanticModelHandler(TypeHandler):
     def primitive_to_ts(self, exporter, type_, src, dest):
         if not self._is_supported(type_):
             return
+
+        if type_.__pydantic_root_model__:
+            return exporter.root_primitive_to_ts(
+                type_.model_fields["root"].annotation, src, dest
+            )
 
         code_lines = CodeLines([], False)
 

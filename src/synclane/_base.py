@@ -18,7 +18,7 @@ class ProcedureNotFound(BaseRpcException):
 
 def ensure_pydantic_model(some_type: Type[Any]):
     return (
-        some_type if issubclass(some_type, BaseModel) else RootModel[some_type]  # type: ignore
+        some_type if isinstance(some_type, type) and issubclass(some_type, BaseModel) else RootModel[some_type]  # type: ignore
     )
 
 

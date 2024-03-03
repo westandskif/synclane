@@ -1,5 +1,4 @@
 import logging
-import sys
 from datetime import date, datetime
 from enum import Enum
 from typing import List
@@ -11,7 +10,6 @@ from synclane import (
     AbstractAsyncProcedure,
     AbstractAsyncRpc,
     AbstractProcedure,
-    AbstractRpc,
     TsExporter,
 )
 
@@ -20,18 +18,74 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-######## ERROR HANDLING #########################
-class UnauthorizedError(Exception):
-    pass
+############################################################
+############# DEFINE PROCEDURES ############################
+class UserParams(BaseModel):
+    uid: constr(min_length=1)
+    created_after: datetime
+    dob_after: date
+
+
+class AccessLevel(Enum):
+    BASIC = 1
+    ADMIN = 2
+
+
+class UserDetails(BaseModel):
+    uid: str
+    name: str
+    created: datetime
+    dob: date
+    access_level: AccessLevel
 
 
 def is_authorized(context):
+    # context can be anything; let it be a request here
     if context.headers.get("x-jwt-token", "") != "secret":
         raise UnauthorizedError
 
 
+class GetUsers(AbstractProcedure):
+    PERMISSIONS = (is_authorized,)
+
+    def call(self, in_: UserParams, context) -> List[UserDetails]:
+        return [
+            UserDetails(
+                uid=in_.uid,
+                name="John",
+                created=in_.created_after,
+                dob=in_.dob_after,
+                access_level=AccessLevel.BASIC,
+            )
+        ]
+
+
+# an example of async one
+class GetUsers2(AbstractAsyncProcedure):
+    PERMISSIONS = (is_authorized,)
+
+    async def call_async(self, in_: UserParams, context) -> List[UserDetails]:
+        return [
+            UserDetails(
+                uid=in_.uid,
+                name="John",
+                created=in_.created_after,
+                dob=in_.dob_after,
+                access_level=AccessLevel.BASIC,
+            )
+        ]
+
+
+############################################################
+######## DEFINE RPC AND REGISTER PROCEDURES ################
+class UnauthorizedError(Exception):
+    pass
+
+
 class Rpc(AbstractAsyncRpc):
     def prepare_exception(self, raw_data, context, exc):
+        # it can be anything, but the below tries to adhere to
+        # https://www.jsonrpc.org/specification
         if isinstance(exc, ValidationError):
             return {
                 "code": -32600,
@@ -54,51 +108,15 @@ class Rpc(AbstractAsyncRpc):
         }
 
 
-############# PROCEDURE #########################
-class UserParams(BaseModel):
-    uid: constr(min_length=1)
-    start_ts: List[datetime]
-    dob: date
+rpc = Rpc().register(GetUsers, GetUsers2)
 
 
-class AccessLevel(Enum):
-    BASIC = 1
-    ADMIN = 2
+############################################################
+############# DUMP TS ######################################
+rpc.ts_dump("src/out.ts")
 
-
-class UserDetails(BaseModel):
-    uid: str
-    name: str
-    start_ts: List[datetime]
-    dob: date
-    access_level: AccessLevel
-
-
-class GetUser(AbstractAsyncProcedure):
-    PERMISSIONS = (is_authorized,)
-
-    async def call_async(self, in_: UserParams, context) -> UserDetails:
-        return UserDetails(
-            name="John", access_level=AccessLevel.BASIC, **in_.dict()
-        )
-
-
-class GetUser2(AbstractProcedure):
-    PERMISSIONS = (is_authorized,)
-
-    def call(self, in_: UserParams, context) -> UserDetails:
-        return UserDetails(
-            name="John", access_level=AccessLevel.BASIC, **in_.dict()
-        )
-
-
-rpc = Rpc().register(GetUser, GetUser2)
-
-
-############# EXPORTING TS ######################
-TsExporter(rpc).write("src/out.ts")
-
-
+############################################################
+############# CONNECT TO API ENDPOINT ######################
 app = FastAPI()
 
 

@@ -1,0 +1,38 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: main python version - 3.9
+        if: ${{ matrix.python-version == '3.9' }}
+        run: |
+          pip install -r ci-requirements/requirements3.9.out
+          pip install -e .
+          black src tests --check
+          isort src tests --check
+          mypy --check-untyped-defs src
+          ruff check
+          pytest
+          bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+
+      - name: other python versions
+        if: ${{ matrix.python-version != '3.9' }}
+        run: |
+          pip install -r ci-requirements/requirements${{ matrix.python-version }}.out
+          pip install -e .
+          pytest

@@ -124,8 +124,8 @@ def test_complex_export_ts(rpc_cls):
         other_tags: list[Tag[date]]
 
     class GetUser(AbstractProcedure):
-        def call(self, in_: UserParams, context) -> UserDetails:
-            return UserDetails(uid=in_.uid, name="John")
+        def call(self, in_: Tuple[UserParams], context) -> List[UserDetails]:
+            return [UserDetails(uid=in_.uid, name="John")]
 
     rpc = rpc_cls().register(GetUser)
 

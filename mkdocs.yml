@@ -1,0 +1,40 @@
+site_name: synclane
+theme:
+  name: material
+        # highlightjs: true
+        # hljs_languages:
+        #     - python
+  custom_dir: docs/overrides
+  features:
+    - content.code.copy
+
+extra:
+  analytics:
+    provider: google
+    property: G-1W4Y8DM3P7
+
+repo_name: westandskif/synclane
+repo_url: https://github.com/westandskif/synclane
+site_url: https://synclane.readthedocs.io/en/latest/
+use_directory_urls: true
+
+nav:
+  - Welcome: README.md
+  - 'Usage / Basics': usage_basics.md
+  - Changelog: CHANGELOG.md
+  - License: LICENSE.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - tables
+  - markdown_include.include:
+      base_path: docs
+      inheritHeadingDepth: true
+  - pymdownx.blocks.tab:
+      alternate_style: true 
+  - pymdownx.blocks.admonition:
+  - pymdownx.highlight:
+      use_pygments: true
+  - pymdownx.inlinehilite:
+  - pymdownx.superfences:

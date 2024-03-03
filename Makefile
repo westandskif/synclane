@@ -1,3 +1,5 @@
+.PHONY: docs
+
 PROJECT := synclane
 
 build:
@@ -45,3 +47,7 @@ checks:
 	ruff check
 	mypy --check-untyped-defs src
 	pylint src
+
+
+docs:
+	mkdocs serve
