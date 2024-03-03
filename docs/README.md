@@ -21,10 +21,10 @@ and use automatically generated TypeScript functions to consume it.
 1. dump typescript, making sure procedure in/out types are browser friendly
 1. connect RPC to an API
 1. on TypeScript side: import `rpcConfig` and initialize:
-   - `rpcConfig.url`: url where RPC is listening
-   - `rpcConfig.initFetch` (optional): function, which accepts and can mutate
-     [fetch options](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
-     as needed
+     * `rpcConfig.url`: url where RPC is listening
+     * `rpcConfig.initFetch` (optional): function, which accepts and can mutate
+       [fetch options](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
+       as needed
 
 ## Installation
 
