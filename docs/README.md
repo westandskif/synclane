@@ -3,8 +3,11 @@
 `synclane` simplifies development of systems with Python backend and TypeScript
 frontend.
 
+You simply define framework-agnostic RPC object with typing-based validation
+and use automatically generated TypeScript functions to consume it.
+
 [![License](https://img.shields.io/github/license/westandskif/synclane.svg)](https://github.com/westandskif/synclane/blob/master/LICENSE.txt)
-[![codecov](https://codecov.io/gh/westandskif/synclane/branch/master/graph/badge.svg)]( https://codecov.io/gh/westandskif/synclane)
+[![codecov](https://codecov.io/gh/westandskif/synclane/branch/master/graph/badge.svg)](https://codecov.io/gh/westandskif/synclane)
 [![Tests status](https://github.com/westandskif/synclane/workflows/tests/badge.svg)](https://github.com/westandskif/synclane/actions/workflows/pytest.yml)
 [![Docs status](https://readthedocs.org/projects/synclane/badge/?version=latest)](https://synclane.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://badge.fury.io/py/synclane.svg)](https://pypi.org/project/synclane/)
@@ -22,6 +25,32 @@ frontend.
    - `rpcConfig.initFetch` (optional): function, which accepts and can mutate
      [fetch options](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
      as needed
+
+## Installation
+
+```bash
+pip install synclane
+```
+
+[pydantic](https://github.com/pydantic/pydantic) is the only dependency.
+
+## Example
+
+/// tab | main.py
+
+```python
+{!../tests/int_tst_fastapi/main.py!}
+```
+
+///
+
+/// tab | client.test.ts
+
+```typescript
+{!../tests/int_tst_fastapi/tests/client.test.ts!}
+```
+
+///
 
 ## Benefits
 
@@ -60,29 +89,3 @@ API endpoint url.
 
 If your procedure in/out types include enums, they will become available in the
 typescript client.
-
-## Installation
-
-```bash
-pip install synclane
-```
-
-[pydantic](https://github.com/pydantic/pydantic) is the only dependency.
-
-## Example
-
-/// tab | main.py
-
-```python
-{!../tests/int_tst_fastapi/main.py!}
-```
-
-///
-
-/// tab | client.test.ts
-
-```typescript
-{!../tests/int_tst_fastapi/tests/client.test.ts!}
-```
-
-///
