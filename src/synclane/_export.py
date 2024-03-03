@@ -94,16 +94,11 @@ class CodeLines:
         return cls([f"{dest} = {src}"], False)
 
 
-class RpcContext(BaseModel):
-    url: str
-
-
 class BaseTsExporter:
     handlers = ()
 
-    def __init__(self, rpc, rpc_context: RpcContext):
+    def __init__(self, rpc):
         self.rpc = rpc
-        self.rpc_context = rpc_context
         self.cache = {}
         self.name_to_interface_def = {}
         self.name_to_enum_def = {}
@@ -160,10 +155,6 @@ return data;
                 }
             )
 
-        self.rename_interface(
-            self.root_type_to_interface(type(self.rpc_context)), "RpcContext"
-        )
-
         for name, enum_def in self.name_to_enum_def.items():
             yield "\n"
             yield f"export enum {name} {enum_def}"
@@ -171,11 +162,6 @@ return data;
         for name, interface_def in self.name_to_interface_def.items():
             yield "\n"
             yield f"export interface {name} {interface_def}\n"
-
-        yield "\n"
-        yield """export let RPC_CONTEXT: RpcContext = %(context_data)s\n""" % {
-            "context_data": self.rpc_context.model_dump_json(),
-        }
 
         for code in prepare_params_defs.values():
             yield "\n"
@@ -202,13 +188,6 @@ return data;
     def name_interface(self, name, interface_def):
         self.name_to_interface_def[name] = interface_def
         return name
-
-    def rename_interface(self, name, new_name):
-        if new_name in self.name_to_interface_def:
-            raise ValueError("name already used")
-        self.name_to_interface_def[new_name] = self.name_to_interface_def.pop(
-            name
-        )
 
     def name_enum(self, name, enum_def):
         self.name_to_enum_def[name] = enum_def

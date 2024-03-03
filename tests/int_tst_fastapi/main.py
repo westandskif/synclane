@@ -12,7 +12,6 @@ from synclane import (
     AbstractAsyncRpc,
     AbstractProcedure,
     AbstractRpc,
-    RpcContext,
     TsExporter,
 )
 
@@ -96,14 +95,8 @@ class GetUser2(AbstractProcedure):
 rpc = Rpc().register(GetUser, GetUser2)
 
 
-class CustomRpcContext(RpcContext):
-    custom: int
-
-
 ############# EXPORTING TS ######################
-TsExporter(rpc, CustomRpcContext(url="http://backend:8000", custom=2)).write(
-    "src/out.ts"
-)
+TsExporter(rpc).write("src/out.ts")
 
 
 app = FastAPI()

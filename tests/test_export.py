@@ -8,7 +8,7 @@ import pytest
 from pydantic import BaseModel, ValidationError, constr
 
 from synclane import AbstractProcedure, AbstractRpc, ProcedureNotFound
-from synclane._export import RpcContext, TsExporter
+from synclane._export import TsExporter
 
 from .base import check_ts, dumb_rpc_cls, rpc_cls
 import sys
@@ -27,7 +27,7 @@ def test_export_types_to_ts(rpc_cls):
         a: constr(min_length=1)
         b: list[T]
 
-    exporter = TsExporter(rpc_cls(), RpcContext(url="abc"))
+    exporter = TsExporter(rpc_cls())
     for type_, expected in [
         (str, "string"),
         (bool, "boolean"),
@@ -123,11 +123,7 @@ def test_complex_export_ts(rpc_cls):
 
     rpc = rpc_cls().register(GetUser)
 
-    assert check_ts(
-        TsExporter(rpc, RpcContext(url="abc")).write(
-            "generated_output_complex.ts"
-        )
-    )
+    assert check_ts(TsExporter(rpc).write("generated_output_complex.ts"))
 
 
 def test_simple_export_ts(rpc_cls):
@@ -149,8 +145,4 @@ def test_simple_export_ts(rpc_cls):
 
     rpc = rpc_cls().register(GetUser)
 
-    assert check_ts(
-        TsExporter(rpc, RpcContext(url="abc")).write(
-            "generated_output_simple.ts"
-        )
-    )
+    assert check_ts(TsExporter(rpc).write("generated_output_simple.ts"))

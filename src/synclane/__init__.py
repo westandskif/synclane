@@ -5,4 +5,4 @@ from ._base import (
     AbstractRpc,
     ProcedureNotFound,
 )
-from ._export import RpcContext, TsExporter
+from ._export import TsExporter

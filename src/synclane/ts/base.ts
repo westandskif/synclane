@@ -8,9 +8,12 @@ function strToDate(d: string): Date {
 function dateToStr(d: Date): string {
     return new Date(d.getTime() - TIMEZONE_OFFSET_IN_MS).toISOString().split("T")[0]
 }
-export let rpcConfig: {
+interface RpcConfig {
+    url?: string,
     initFetch?: (init: RequestInit) => RequestInit;
-} = {};
+};
+export let rpcConfig: RpcConfig = {};
+
 class AbortableRequest<T> {
     public $promise: Promise<T>;
     private controller: AbortController;
@@ -25,12 +28,14 @@ class AbortableRequest<T> {
 }
 let REQUEST_COUNTER = 1;
 function fetchAndPrepare<U>(
-    url: string,
     init: RequestInit,
     primitiveToResult: (data: any) => U
 ): Promise<U> {
     return new Promise((resolve, reject) => {
-        fetch(url, init)
+        if (rpcConfig.url === undefined) {
+            return reject("rpcConfig.url is not initialized");
+        }
+        return fetch(rpcConfig.url, init)
             .then((response) => response.json())
             .then((data) => {
                 if (data.result === undefined) {
@@ -63,12 +68,12 @@ export function abortableFetch<T, U>(
     };
 
     init.signal = controller.signal;
-    if (rpcConfig.initFetch !== undefined) {
+    if (rpcConfig && rpcConfig.initFetch !== undefined) {
         init = rpcConfig.initFetch(init);
     }
 
     return new AbortableRequest<U>(
-        fetchAndPrepare(RPC_CONTEXT.url, init, primitiveToResult),
+        fetchAndPrepare(init, primitiveToResult),
         controller,
     );
 }

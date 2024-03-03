@@ -3,11 +3,10 @@ import {
     callGetUser2,
     AccessLevel,
     rpcConfig,
-    RPC_CONTEXT,
 } from "../src/out";
 
 test("API client", async () => {
-    expect(RPC_CONTEXT.custom).toEqual(2);
+    rpcConfig.url = "http://backend:8000";
     let start_ts = new Date();
     let dob = new Date(2000, 0, 1);
     rpcConfig.initFetch = (init: RequestInit) => {
