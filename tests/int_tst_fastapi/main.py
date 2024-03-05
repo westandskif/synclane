@@ -1,16 +1,15 @@
 import logging
 from datetime import date, datetime
 from enum import Enum
-from typing import List
+from typing import Generic, List, Optional, TypeVar
 
 from fastapi import FastAPI, Request
-from pydantic import BaseModel, ValidationError, constr
+from pydantic import BaseModel, ValidationError, conint
 
 from synclane import (
     AbstractAsyncProcedure,
     AbstractAsyncRpc,
     AbstractProcedure,
-    TsExporter,
 )
 
 
@@ -20,10 +19,10 @@ logger.setLevel(logging.DEBUG)
 
 ############################################################
 ############# DEFINE PROCEDURES ############################
-class UserParams(BaseModel):
-    uid: constr(min_length=1)
-    created_after: datetime
-    dob_after: date
+
+
+class GetObjectParams(BaseModel):
+    uid: str
 
 
 class AccessLevel(Enum):
@@ -45,35 +44,52 @@ def is_authorized(context):
         raise UnauthorizedError
 
 
-class GetUsers(AbstractProcedure):
+class GetUser(AbstractProcedure):
     PERMISSIONS = (is_authorized,)
 
-    def call(self, in_: UserParams, context) -> List[UserDetails]:
-        return [
-            UserDetails(
-                uid=in_.uid,
-                name="John",
-                created=in_.created_after,
-                dob=in_.dob_after,
-                access_level=AccessLevel.BASIC,
-            )
-        ]
+    def call(self, in_: GetObjectParams, context) -> UserDetails:
+        return UserDetails(
+            uid=in_.uid,
+            name="John",
+            created=datetime.fromtimestamp(0),
+            dob=date(1970, 1, 1),
+            access_level=AccessLevel.BASIC,
+        )
 
 
-# an example of async one
-class GetUsers2(AbstractAsyncProcedure):
+# LET'S ADD FAKE PAGINATION AND MAKE IT ASYNC JUST FOR EXAMPLE
+class Params(BaseModel):
+    page: conint(gt=0)
+    created_after: Optional[datetime] = None
+    dob_after: Optional[date] = None
+
+
+T = TypeVar("T")
+
+
+class Paginated(BaseModel, Generic[T]):
+    has_next: bool
+    has_prev: bool
+    data: List[T]
+
+
+class GetUsers(AbstractAsyncProcedure):
     PERMISSIONS = (is_authorized,)
 
-    async def call_async(self, in_: UserParams, context) -> List[UserDetails]:
-        return [
-            UserDetails(
-                uid=in_.uid,
-                name="John",
-                created=in_.created_after,
-                dob=in_.dob_after,
-                access_level=AccessLevel.BASIC,
-            )
-        ]
+    async def call_async(self, in_: Params, context) -> Paginated[UserDetails]:
+        return {
+            "has_next": True,
+            "has_prev": False,
+            "data": [
+                UserDetails(
+                    uid="4eeb24a4-ecc1-4d9a-a43c-7263c6c60a07",
+                    name="John",
+                    created=in_.created_after,
+                    dob=in_.dob_after,
+                    access_level=AccessLevel.BASIC,
+                )
+            ],
+        }
 
 
 ############################################################
@@ -108,7 +124,7 @@ class Rpc(AbstractAsyncRpc):
         }
 
 
-rpc = Rpc().register(GetUsers, GetUsers2)
+rpc = Rpc().register(GetUsers, GetUser)
 
 
 ############################################################
