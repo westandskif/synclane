@@ -1,10 +1,7 @@
 # Welcome to synclane
 
-`synclane` simplifies development of systems with Python backend and TypeScript
-frontend.
-
-You simply define framework-agnostic RPC object with typing-based validation
-and use automatically generated TypeScript functions to consume it.
+`synclane` is a framework-agnostic RPC API with a smart auto-generated
+TypeScript client.
 
 [![License](https://img.shields.io/github/license/westandskif/synclane.svg)](https://github.com/westandskif/synclane/blob/master/LICENSE.txt)
 [![codecov](https://codecov.io/gh/westandskif/synclane/graph/badge.svg?token=JL9C46RNGU)](https://codecov.io/gh/westandskif/synclane)
@@ -14,43 +11,26 @@ and use automatically generated TypeScript functions to consume it.
 [![Downloads](https://static.pepy.tech/badge/synclane)](https://pepy.tech/project/synclane)
 [![Python versions](https://img.shields.io/pypi/pyversions/synclane.svg)](https://pypi.org/project/synclane/)
 
-## Usage
+## Idea
 
-1. define procedures
-1. define RPC instance, its error handling method and register procedures
-1. dump typescript, making sure procedure in/out types are browser friendly
-1. connect RPC to an API
-1. on TypeScript side: import `rpcConfig` and initialize:
-     * `rpcConfig.url`: url where RPC is listening
-     * `rpcConfig.initFetch` (optional): function, which accepts and can mutate
-       [fetch options](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
-       as needed
-
-## Installation
-
-```bash
-pip install synclane
-```
-
-[pydantic](https://github.com/pydantic/pydantic) is the only dependency.
-
-## Example
-
-/// tab | main.py
+The below must be enough to define an API:
 
 ```python
-{!../tests/int_tst_fastapi/main.py!}
+class UserParams(pydantic.BaseModel):
+    uid: str
+
+class GetUsers(AbstractProcedure):
+    def call(self, in_: UserParams, context) -> List[UserDetails]:
+        ...
 ```
 
-///
-
-/// tab | client.test.ts
+and use an automatically generated frontend TypeScript client:
 
 ```typescript
-{!../tests/int_tst_fastapi/tests/client.test.ts!}
-```
+import { callGetUsers } from "./src/out";
 
-///
+expect(callGetUsers(userParams).$promise).resolves.toEqual(listOfUserDetails);
+```
 
 ## Benefits
 
@@ -89,3 +69,41 @@ API endpoint url.
 
 If your procedure in/out types include enums, they will become available in the
 typescript client.
+
+## Installation
+
+```bash
+pip install synclane
+```
+
+[pydantic](https://github.com/pydantic/pydantic) is the only dependency.
+
+## Usage
+
+1. define procedures
+1. define RPC instance, its error handling method and register procedures
+1. dump TypeScript client code
+1. connect RPC to an API
+1. on TypeScript side: import `rpcConfig` and initialize:
+     - `rpcConfig.url`: url where RPC is listening
+     - `rpcConfig.initFetch` (optional): function, which accepts and can mutate
+       [fetch options](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
+       as needed
+
+## Example
+
+/// tab | main.py
+
+```python
+{!../tests/int_tst_fastapi/main.py!}
+```
+
+///
+
+/// tab | client.test.ts
+
+```typescript
+{!../tests/int_tst_fastapi/tests/client.test.ts!}
+```
+
+///
