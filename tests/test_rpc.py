@@ -30,13 +30,15 @@ def test_success(rpc_cls):
 
     rpc = rpc_cls().register(GetUser)
 
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "GetUser",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "GetUser",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "id": 1,
@@ -44,13 +46,15 @@ def test_success(rpc_cls):
         "result": {"name": "John", "uid": "7fa8d"},
     }
 
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "missing",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "missing",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "error": {"code": -32601, "message": "Method not found"},
@@ -58,24 +62,28 @@ def test_success(rpc_cls):
         "jsonrpc": "2.0",
     }
 
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "GetUser",
-            "params": {},
-        },
-        None,
+    result = json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "GetUser",
+                "params": {},
+            },
+            None,
+        )
     )
     # fmt: off
-    assert result == { "error": { "code": -32600, "details": [ { "input": {}, "loc": ("uid",), "msg": "Field required", "type": "missing", } ], "message": "Validation error", }, "id": 1, "jsonrpc": "2.0", }
+    assert result == { "error": { "code": -32600, "details": [ { "input": {}, "loc": ["uid"], "msg": "Field required", "type": "missing", } ], "message": "Validation error", }, "id": 1, "jsonrpc": "2.0", }
     # fmt: on
 
-    result = rpc.call(
-        {},
-        None,
+    result = json.loads(
+        rpc.call(
+            {},
+            None,
+        )
     )
     # fmt: off
-    assert result == { "error": { "code": -32600, "details": [ { "input": {}, "loc": ("id",), "msg": "Field required", "type": "missing", }, { "input": {}, "loc": ("method",), "msg": "Field required", "type": "missing", }, { "input": {}, "loc": ("params",), "msg": "Field required", "type": "missing", }, ], "message": "Validation error", }, "id": None, "jsonrpc": "2.0", }
+    assert result == { "error": { "code": -32600, "details": [ { "input": {}, "loc": ["id"], "msg": "Field required", "type": "missing", }, { "input": {}, "loc": ["method"], "msg": "Field required", "type": "missing", }, { "input": {}, "loc": ["params"], "msg": "Field required", "type": "missing", }, ], "message": "Validation error", }, "id": None, "jsonrpc": "2.0", }
     # fmt: on
 
 
@@ -108,39 +116,45 @@ async def test_async(rpc_async_cls, dumb_async_rpc_cls):
 
     rpc = rpc_async_cls().register(GetUser, GetUser2)
 
-    result = await rpc.call_async(
-        {
-            "id": 1,
-            "method": "GetUser",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        await rpc.call_async(
+            {
+                "id": 1,
+                "method": "GetUser",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "id": 1,
         "jsonrpc": "2.0",
         "result": {"name": "John", "params": [{"uid": "7fa8d"}]},
     }
-    result = await rpc.call_async(
-        {
-            "id": 1,
-            "method": "GetUser2",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        await rpc.call_async(
+            {
+                "id": 1,
+                "method": "GetUser2",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "id": 1,
         "jsonrpc": "2.0",
         "result": {"name": "John", "params": [{"uid": "7fa8d"}]},
     }
-    result = await rpc.call_async(
-        {
-            "id": 1,
-            "method": "GetUser2",
-            "params": {},
-        },
-        None,
+    result = json.loads(
+        await rpc.call_async(
+            {
+                "id": 1,
+                "method": "GetUser2",
+                "params": {},
+            },
+            None,
+        )
     )
     assert result == {
         "error": {
@@ -148,7 +162,7 @@ async def test_async(rpc_async_cls, dumb_async_rpc_cls):
             "details": [
                 {
                     "input": {},
-                    "loc": ("uid",),
+                    "loc": ["uid"],
                     "msg": "Field required",
                     "type": "missing",
                 }
@@ -159,9 +173,11 @@ async def test_async(rpc_async_cls, dumb_async_rpc_cls):
         "jsonrpc": "2.0",
     }
 
-    result = await rpc.call_async(
-        {"id": 1, "method": "missing", "params": None},
-        None,
+    result = json.loads(
+        await rpc.call_async(
+            {"id": 1, "method": "missing", "params": None},
+            None,
+        )
     )
     assert result == {
         "error": {"code": -32601, "message": "Method not found"},
@@ -200,13 +216,15 @@ def test_complex_types(rpc_cls):
 
     rpc = rpc_cls().register(GetUser)
 
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "GetUser",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "GetUser",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "id": 1,
@@ -257,13 +275,15 @@ def test_exceptions(dumb_rpc_cls, dumb_async_rpc_cls, rpc_cls, rpc_async_cls):
     with pytest.raises(TypeError):
         async_rpc.register(bool)
 
-    result = rpc.call(
-        {
-            "id": 1,
-            "method": "GetUser",
-            "params": {"uid": "7fa8d"},
-        },
-        None,
+    result = json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "GetUser",
+                "params": {"uid": "7fa8d"},
+            },
+            None,
+        )
     )
     assert result == {
         "id": 1,
@@ -315,13 +335,15 @@ def test_exceptions(dumb_rpc_cls, dumb_async_rpc_cls, rpc_cls, rpc_async_cls):
             {},
         )
 
-    assert rpc.call(
-        {
-            "id": 1,
-            "method": "AuthorizedGet",
-            "params": {"uid": "7fa8d"},
-        },
-        {"user": 1},
+    assert json.loads(
+        rpc.call(
+            {
+                "id": 1,
+                "method": "AuthorizedGet",
+                "params": {"uid": "7fa8d"},
+            },
+            {"user": 1},
+        )
     ) == {"id": 1, "jsonrpc": "2.0", "result": {}}
 
     with pytest.raises(ValueError):

@@ -7,4 +7,4 @@ tags
 .s.vim
 dist/
 node_modules/
-tests/int_tst_fastapi/src
+tests/int_tst/src

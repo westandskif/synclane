@@ -3,9 +3,11 @@
 import abc
 import asyncio
 import inspect
+from io import BytesIO
 from typing import Any, Awaitable, Callable, Optional, Sequence, Type
 
 from pydantic import BaseModel, RootModel
+from pydantic_core import to_json
 
 
 class BaseRpcException(Exception):
@@ -161,39 +163,48 @@ class AbstractRpc(abc.ABC):
 
         return self
 
-    def call(self, raw_data, context):
-        request_id = None
+    def call(self, raw_data, context) -> bytes:
+        buf = BytesIO()
+        write_ = buf.write
+
+        request_id = b"null"
         try:
             rpc_request = (
                 RpcRequest.model_validate_json(raw_data)
                 if isinstance(raw_data, (str, bytes, bytearray))
                 else RpcRequest.model_validate(raw_data)
             )
-            request_id = rpc_request.id
+            request_id = str(rpc_request.id).encode("utf-8")
             if rpc_request.method not in self.procedures:
-                return {
-                    "jsonrpc": "2.0",
-                    "error": {"code": -32601, "message": "Method not found"},
-                    "id": request_id,
-                }
+                write_(
+                    b'{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": '
+                )
+                write_(request_id)
+                write_(b"}")
+                return buf.getvalue()
 
             result = self.procedures[  # pylint: disable=protected-access
                 rpc_request.method
             ]._call(rpc_request.params, context)
-            return {
-                "jsonrpc": "2.0",
-                "result": result.model_dump(),
-                "id": request_id,
-            }
+
+            write_(b'{"jsonrpc": "2.0", "result": ')
+            write_(result.__pydantic_serializer__.to_json(result))
+            write_(b', "id": ')
+            write_(request_id)
+            write_(b"}")
+            return buf.getvalue()
+
         except Exception as e:  # pylint: disable=broad-exception-caught
             data = self.prepare_exception(raw_data, context, e)
             if data is None:
                 raise
-            return {
-                "jsonrpc": "2.0",
-                "error": data,
-                "id": request_id,
-            }
+
+            write_(b'{"jsonrpc": "2.0", "error": ')
+            write_(to_json(data))
+            write_(b', "id": ')
+            write_(request_id)
+            write_(b"}")
+            return buf.getvalue()
 
     @abc.abstractmethod
     def prepare_exception(self, raw_data, context, exc):
@@ -231,8 +242,10 @@ class AbstractAsyncRpc(abc.ABC):
             self.procedures[name] = procedure()
         return self
 
-    async def call_async(self, raw_data, context):
-        request_id = None
+    async def call_async(self, raw_data, context) -> bytes:
+        buf = BytesIO()
+        write_ = buf.write
+        request_id = b"null"
         try:
             rpc_request = (
                 RpcRequest.model_validate_json(raw_data)
@@ -240,13 +253,14 @@ class AbstractAsyncRpc(abc.ABC):
                 else RpcRequest.model_validate(raw_data)
             )
 
-            request_id = rpc_request.id
+            request_id = str(rpc_request.id).encode("utf-8")
             if rpc_request.method not in self.procedures:
-                return {
-                    "jsonrpc": "2.0",
-                    "error": {"code": -32601, "message": "Method not found"},
-                    "id": request_id,
-                }
+                write_(
+                    b'{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": '
+                )
+                write_(request_id)
+                write_(b"}")
+                return buf.getvalue()
 
             procedure = self.procedures[rpc_request.method]
             if isinstance(procedure, AbstractAsyncProcedure):
@@ -259,21 +273,24 @@ class AbstractAsyncRpc(abc.ABC):
                 result = procedure._call(  # pylint: disable=protected-access
                     rpc_request.params, context
                 )
-            return {
-                "jsonrpc": "2.0",
-                "result": result.model_dump(),
-                "id": request_id,
-            }
+
+            write_(b'{"jsonrpc": "2.0", "result": ')
+            write_(result.__pydantic_serializer__.to_json(result))
+            write_(b', "id": ')
+            write_(request_id)
+            write_(b"}")
+            return buf.getvalue()
 
         except Exception as e:  # pylint: disable=broad-exception-caught
             data = self.prepare_exception(raw_data, context, e)
             if data is None:
                 raise
-            return {
-                "jsonrpc": "2.0",
-                "error": data,
-                "id": request_id,
-            }
+            write_(b'{"jsonrpc": "2.0", "error": ')
+            write_(to_json(data))
+            write_(b', "id": ')
+            write_(request_id)
+            write_(b"}")
+            return buf.getvalue()
 
     @abc.abstractmethod
     def prepare_exception(self, raw_data, context, exc):

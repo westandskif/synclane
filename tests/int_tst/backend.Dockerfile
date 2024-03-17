@@ -19,4 +19,4 @@ WORKDIR "${PROJ}"
 
 EXPOSE 8000
 
-CMD bash -c "pip install -e /mnt/synclane && uvicorn --host=0.0.0.0 --port=8000 main:app"
+CMD bash

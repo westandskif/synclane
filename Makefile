@@ -27,15 +27,15 @@ test-py%:
 test: test-py3.7 test-py3.8 test-py3.9 test-py3.10 test-py3.11 test-py3.12
 
 
-lock-int-tst-fast-api-py%:
+lock-int-tst-py%:
 	docker run --rm -it \
 		-v $$PWD:/mnt/${PROJECT} \
-		-w /mnt/${PROJECT}/tests/int_tst_fastapi \
+		-w /mnt/${PROJECT}/tests/int_tst \
 		python:$* bash -c \
 		"rm -f requirements$*.out && pip install -r requirements$*.in && pip freeze > requirements$*.out"
 
-test/int-tst-fast-api:
-	cd tests/int_tst_fastapi \
+test/int-tst:
+	cd tests/int_tst \
 		&& docker compose stop \
 		&& docker compose build \
 		&& docker compose up frontend \

@@ -1,6 +1,6 @@
 [project]
 name = "synclane"
-version = "0.1.0"
+version = "0.2.0"
 description = "framework-agnostic RPC API with a smart auto-generated TypeScript client"
 authors = [
   {email = "nikita.almakov@gmail.com", name = "Nikita Almakov"},

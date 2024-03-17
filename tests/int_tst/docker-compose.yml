@@ -1,0 +1,50 @@
+services:
+  backend-django:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    command: bash -c "pip install -e /mnt/synclane && uvicorn --interface=asgi3 --host=0.0.0.0 --port=8000 main:app_django"
+    volumes:
+      - "../..:/mnt/synclane"
+      - ".:/home/suser/int_tst"
+    ports:
+      - "8000:8000"
+    stop_signal: SIGKILL
+    healthcheck:
+      test:
+        ["CMD", "printf", "GET / HTTP/1.1\n\n", ">", "/dev/tcp/127.0.0.1/8000"]
+      timeout: 30s
+      interval: 1s
+      retries: 30
+
+  backend-fastapi:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    command: bash -c "pip install -e /mnt/synclane && uvicorn --host=0.0.0.0 --port=8000 main:app_fast_api"
+    volumes:
+      - "../..:/mnt/synclane"
+      - ".:/home/suser/int_tst"
+    ports:
+      - "8001:8000"
+    stop_signal: SIGKILL
+    healthcheck:
+      test:
+        ["CMD", "printf", "GET / HTTP/1.1\n\n", ">", "/dev/tcp/127.0.0.1/8000"]
+      timeout: 30s
+      interval: 1s
+      retries: 30
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    volumes:
+      - ".:/home/suser/int_tst"
+    depends_on:
+      backend-django:
+        condition: service_healthy
+        restart: true
+      backend-fastapi:
+        condition: service_healthy
+        restart: true

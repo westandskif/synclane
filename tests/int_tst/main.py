@@ -1,24 +1,21 @@
+# --8<-- [start:def_procedures]
 import logging
 from datetime import date, datetime
 from enum import Enum
 from typing import Generic, List, Optional, TypeVar
 
-from fastapi import FastAPI, Request
 from pydantic import BaseModel, ValidationError, conint
 
 from synclane import (
     AbstractAsyncProcedure,
     AbstractAsyncRpc,
     AbstractProcedure,
+    AbstractRpc,
 )
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-
-############################################################
-############# DEFINE PROCEDURES ############################
 
 
 class GetObjectParams(BaseModel):
@@ -92,13 +89,15 @@ class GetUsers(AbstractAsyncProcedure):
         }
 
 
-############################################################
-######## DEFINE RPC AND REGISTER PROCEDURES ################
+# --8<-- [end:def_procedures]
+
+
+# --8<-- [start:def_rpc]
 class UnauthorizedError(Exception):
     pass
 
 
-class Rpc(AbstractAsyncRpc):
+class Rpc(AbstractAsyncRpc):  # OR AbstractRpc for sync only procedures
     def prepare_exception(self, raw_data, context, exc):
         # it can be anything, but the below tries to adhere to
         # https://www.jsonrpc.org/specification
@@ -127,21 +126,101 @@ class Rpc(AbstractAsyncRpc):
 rpc = Rpc().register(GetUsers, GetUser)
 
 
-############################################################
-############# DUMP TS ######################################
+# dump TypeScript client
 rpc.ts_dump("src/out.ts")
-
-############################################################
-############# CONNECT TO API ENDPOINT ######################
-app = FastAPI()
+# --8<-- [end:def_rpc]
 
 
-@app.post("/")
-async def read_root(request: Request):
-    # for sync version of rpc:
-    # >>> rpc.call(await request.body(), request)
+import sys
 
-    return await rpc.call_async(
-        await request.body(),  # always full body as is
-        request,  # anything to be passed to procedures as context
+from django.conf import settings
+from django.core.asgi import get_asgi_application
+from django.core.management import execute_from_command_line
+from django.http import HttpResponse
+from django.urls import path
+
+
+settings.configure(
+    DEBUG=True,
+    SECRET_KEY="8fashd9f87has8d7fh0a9shdf098asd098fja09sdf",
+    ROOT_URLCONF=sys.modules[__name__],
+)
+
+
+# --8<-- [start:django_async]
+from django.http import HttpResponse
+
+
+async def index(request):
+    return HttpResponse(
+        await rpc.call_async(request.body, request),
+        content_type="application/json",
     )
+
+
+# --8<-- [end:django_async]
+
+"""
+# --8<-- [start:django_sync]
+from django.http import HttpResponse
+
+
+def index(request):
+    return HttpResponse(
+        rpc.call(request.body, request),
+        content_type="application/json",
+    )
+
+
+# --8<-- [end:django_sync]
+"""
+
+
+urlpatterns = [
+    path(r"", index),
+]
+
+
+app_django = get_asgi_application()
+
+
+# --8<-- [start:fastapi_async]
+from fastapi import FastAPI, Request, Response
+
+
+app_fast_api = FastAPI()
+
+
+@app_fast_api.post("/")
+async def read_root(request: Request):
+    return Response(
+        await rpc.call_async(
+            await request.body(),  # always full body as is
+            request,  # anything to be passed to procedures as context
+        ),
+        media_type="application/json",
+    )
+
+
+# --8<-- [end:fastapi_async]
+"""
+# --8<-- [start:fastapi_sync]
+from fastapi import FastAPI, Request, Response
+
+
+app_fast_api = FastAPI()
+
+
+@app_fast_api.post("/")
+async def read_root(request: Request):
+    return Response(
+        rpc.call(
+            await request.body(),  # always full body as is
+            request,  # anything to be passed to procedures as context
+        ),
+        media_type="application/json",
+    )
+
+
+# --8<-- [end:fastapi_sync]
+"""
