@@ -1,4 +1,4 @@
-## 0.2.1 (2024-10-29)
+## 0.2.2 (2024-10-29)
 
 - handled connection error properly (as promise rejection)
 
