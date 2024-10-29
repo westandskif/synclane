@@ -14,7 +14,7 @@ interface RpcConfig {
 };
 export let rpcConfig: RpcConfig = {};
 
-class AbortableRequest<T> {
+export class AbortableRequest<T> {
     public $promise: Promise<T>;
     private controller: AbortController;
     public abort() {
@@ -43,7 +43,7 @@ function fetchAndPrepare<U>(
                 } else {
                     resolve(primitiveToResult(data.result));
                 }
-            })
+            }, (err) => reject(err))
     });
 }
 export function abortableFetch<T, U>(

@@ -1,6 +1,6 @@
 [project]
 name = "synclane"
-version = "0.2.0"
+dynamic = ["version"]
 description = "framework-agnostic RPC API with a smart auto-generated TypeScript client"
 authors = [
   {email = "nikita.almakov@gmail.com", name = "Nikita Almakov"},
@@ -24,6 +24,7 @@ classifiers = [
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
 	"Topic :: Software Development :: Code Generators",
 	"Topic :: Software Development :: Libraries",
 	"Topic :: Software Development :: Libraries :: Python Modules",
@@ -59,6 +60,9 @@ doc = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/synclane/__init__.py"
 
 [tool.hatch.build.sources]
 "src/synclane" = "synclane"

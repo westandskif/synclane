@@ -8,6 +8,13 @@ import {
 // --8<-- [end:imports]
 
 test("API client", async () => {
+    rpcConfig.url = "http://backend-missing:8000";
+    console.log("TESTING: ", rpcConfig.url);
+    expect(
+        callGetUsers({ page: 1, created_after: new Date(), dob_after: new Date() }).$promise.then(() => 1, () => 2),
+    ).resolves.toEqual(2);
+    rpcConfig.url = undefined;
+
     for (let backend of [
         { url: "http://backend-django:8000", framework: "django" },
         { url: "http://backend-fastapi:8000", framework: "fastapi" }
