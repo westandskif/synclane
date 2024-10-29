@@ -40,7 +40,7 @@ jobs:
         run: |
           npm install -D typescript@~5.3
           pip install -r ci-requirements/requirements${{ matrix.os-python-node[1] }}.out
-          ${{ matrix.os-python-node[2] }} pip install -e .
+          pip install -e .
           pytest --benchmark-skip --no-cov
 
       - name: run tests & lint
@@ -52,7 +52,7 @@ jobs:
           isort src tests --check
           ruff check src
           mypy --check-untyped-defs src
-          ${{ matrix.os-python-node[2] }} pip install -e .
+          pip install -e .
           pytest --benchmark-skip --no-cov
 
   build_sdist_n_wheel:
