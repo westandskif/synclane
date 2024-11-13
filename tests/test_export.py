@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError, constr
@@ -37,6 +38,7 @@ def test_export_types_to_ts(rpc_cls):
     exporter = TsExporter(rpc_cls())
     for type_, expected in [
         (str, "string"),
+        (UUID, "string"),
         (bool, "boolean"),
         (int, "number"),
         (float, "number"),
@@ -95,6 +97,7 @@ def test_complex_export_ts(rpc_cls):
 
     class UserParams(BaseModel):
         uid: str
+        uid2: UUID
         created: (
             (datetime | None) if SUPPORTS_NEW_UNION else Optional[datetime]
         )

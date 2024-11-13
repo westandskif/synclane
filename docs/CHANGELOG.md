@@ -1,3 +1,7 @@
+## 0.4.0 (2024-11-13)
+
+ - added `UUID` support on py-side
+
 ## 0.3.0 (2024-11-13)
 
 - added `setHeaders(headersInit: HeadersInit, headersToSet: Record<string, string>)` to ts client

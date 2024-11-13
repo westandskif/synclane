@@ -8,6 +8,7 @@ from enum import Enum
 from inspect import isclass
 from itertools import cycle
 from typing import MutableMapping, Sequence, TypeVar, Union  # type: ignore
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -267,6 +268,7 @@ class SimpleTypeHandler(TypeHandler):
 
     simple_types = {
         str: "string",
+        UUID: "string",
         bool: "boolean",
         int: "number",
         float: "number",
