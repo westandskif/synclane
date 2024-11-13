@@ -3,3 +3,4 @@
 tags
 coverage.xml
 node_modules/
+.mypy_cache/

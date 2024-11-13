@@ -1,3 +1,8 @@
+## 0.3.0 (2024-11-13)
+
+- added `setHeaders(headersInit: HeadersInit, headersToSet: Record<string, string>)` to ts client
+- added `readResponse?: (response: Response) => void;` to `RpcConfig`
+
 ## 0.2.2 (2024-10-29)
 
 - handled connection error properly (as promise rejection)

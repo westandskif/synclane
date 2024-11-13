@@ -4,8 +4,25 @@ import {
     callGetUser,
     AccessLevel,
     rpcConfig,
+    setHeaders,
 } from "../src/out";
 // --8<-- [end:imports]
+
+test("setHeaders", () => {
+    let headers: Array<[string, string]> = [["x", "y"]];
+    setHeaders(headers, {a: "b", c: "d"});
+    expect(headers).toEqual([["x", "y"], ["a", "b"], ["c", "d"]]);
+
+    let headers2 = {a: "c", b: "d"};
+    setHeaders(headers2, {a: "b", c: "d"});
+    expect(headers2).toEqual({a: "b", b: "d", c: "d"});
+
+    let headers3 = new Headers();
+    headers3.set("a", "b");
+    setHeaders(headers3, {c: "d"});
+    expect(headers3.get("a")).toEqual("b");
+    expect(headers3.get("c")).toEqual("d");
+});
 
 test("API client", async () => {
     rpcConfig.url = "http://backend-missing:8000";
@@ -31,9 +48,12 @@ test("API client", async () => {
         // example of adding authentication
         // init is fetch options - https://developer.mozilla.org/en-US/docs/Web/API/fetch
         rpcConfig.initFetch = (init: RequestInit) => {
-            let headers = (init.headers = init.headers || {});
-            headers["X-Jwt-Token"] = "secret";
+            setHeaders(init.headers, { "X-Jwt-Token": "secret" });
             return init;
+        };
+        // to listen to response headers
+        rpcConfig.readResponse = (response: Response) => {
+            expect(response.headers.get("Content-Type")).toEqual("application/json");
         };
         // --8<-- [end:rpc_config]
 
@@ -76,10 +96,10 @@ test("API client", async () => {
             ],
         });
 
+
         // breaking authentication
         rpcConfig.initFetch = (init: RequestInit) => {
-            let headers = (init.headers = init.headers || {});
-            headers["X-Jwt-Token"] = "secret-bad";
+            setHeaders(init.headers, { "X-Jwt-Token": "secret-bad" });
             return init;
         };
         expect(
