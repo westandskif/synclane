@@ -3,6 +3,7 @@ import logging
 from datetime import date, datetime
 from enum import Enum
 from typing import Generic, List, Optional, TypeVar
+from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, conint
 
@@ -19,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 
 
 class GetObjectParams(BaseModel):
-    uid: str
+    uid: UUID
 
 
 class AccessLevel(Enum):
@@ -28,7 +29,7 @@ class AccessLevel(Enum):
 
 
 class UserDetails(BaseModel):
-    uid: str
+    uid: UUID
     name: str
     created: datetime
     dob: date
