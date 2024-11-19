@@ -98,6 +98,7 @@ def test_complex_export_ts(rpc_cls):
     class UserParams(BaseModel):
         uid: str
         uid2: UUID
+        flag_optional: bool = False
         created: (
             (datetime | None) if SUPPORTS_NEW_UNION else Optional[datetime]
         )
@@ -114,6 +115,7 @@ def test_complex_export_ts(rpc_cls):
         tag_value: T
         created: datetime
         flag: bool
+        flag_optional: bool = False
         number: int
         rate: float
         raw: dict

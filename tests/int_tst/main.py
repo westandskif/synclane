@@ -57,7 +57,7 @@ class GetUser(AbstractProcedure):
 
 # LET'S ADD FAKE PAGINATION AND MAKE IT ASYNC JUST FOR EXAMPLE
 class Params(BaseModel):
-    page: conint(gt=0)
+    page: conint(gt=0) = 1
     created_after: Optional[datetime] = None
     dob_after: Optional[date] = None
 

@@ -380,6 +380,15 @@ class PydanticModelHandler(TypeHandler):
         )
 
         for field_name, field_info in type_.model_fields.items():
+            is_optional = not field_info.is_required()
+            if is_optional:
+                code_lines.lines.append(
+                    'if ("%(field_name)s" in %(src)s) {'
+                    % {
+                        "field_name": field_name,
+                        "src": src,
+                    }
+                )
             code_lines.add(
                 exporter.root_ts_to_primitive(
                     field_info.annotation,
@@ -387,6 +396,8 @@ class PydanticModelHandler(TypeHandler):
                     f"{dest}.{field_name}",
                 )
             )
+            if is_optional:
+                code_lines.lines.append("}")
         return code_lines
 
     def primitive_to_ts(self, exporter, type_, src, dest):
@@ -413,8 +424,9 @@ class PydanticModelHandler(TypeHandler):
     def _model_to_def(self, exporter, type_):
         return "{%s}" % ", ".join(
             [
-                "{}: {}".format(
+                "{}{}: {}".format(
                     field_name,
+                    "" if field_info.is_required() else "?",
                     exporter.root_type_to_interface(field_info.annotation),
                 )
                 for field_name, field_info in type_.model_fields.items()

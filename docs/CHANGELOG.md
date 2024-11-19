@@ -1,3 +1,7 @@
+## 0.5.0 (2024-11-19)
+
+ - added support for ts optional fields (with default value on py side)
+
 ## 0.4.0 (2024-11-13)
 
  - added `UUID` support on py-side
