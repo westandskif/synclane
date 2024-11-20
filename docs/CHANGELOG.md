@@ -1,3 +1,7 @@
+## 0.6.0 (2024-11-20)
+
+ - added support for python's typing.Literal
+
 ## 0.5.0 (2024-11-19)
 
  - added support for ts optional fields (with default value on py side)

@@ -7,7 +7,7 @@ from datetime import date, datetime
 from enum import Enum
 from inspect import isclass
 from itertools import cycle
-from typing import MutableMapping, Sequence, TypeVar, Union  # type: ignore
+from typing import MutableMapping, TypeVar, Union  # type: ignore
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -119,7 +119,7 @@ class CodeLines:
 class BaseTsExporter:
     """Exporter to Typescript."""
 
-    handlers: "Sequence[TypeHandler]" = ()
+    handlers: "list[TypeHandler]" = []
 
     def __init__(self, rpc: Union[AbstractAsyncRpc, AbstractRpc]):
         self.rpc = rpc
@@ -767,7 +767,7 @@ class EnumHandler(TypeHandler):
 
 
 class TsExporter(BaseTsExporter):
-    handlers = (
+    handlers = [
         SimpleTypeHandler(),
         DateHandler(),
         GenericListHandler(),
@@ -777,4 +777,28 @@ class TsExporter(BaseTsExporter):
         UnionHandler(),
         TypeVarHandler(),
         PydanticModelHandler(),
-    )
+    ]
+
+
+if sys.version_info[0:2] >= (3, 8):
+    from typing import Literal
+
+    class LiteralHandler(TypeHandler):
+        def _is_supported(self, type_):
+            return getattr(type_, "__origin__", None) is Literal
+
+        def type_to_interface(self, exporter, type_):
+            if self._is_supported(type_):
+                return " | ".join([f'"{arg}"' for arg in type_.__args__])
+
+        def ts_to_primitive(self, exporter, type_, src, dest):
+            if self._is_supported(type_):
+                return CodeLines.naive(src, dest)
+
+        def primitive_to_ts(self, exporter, type_, src, dest):
+            if self._is_supported(type_):
+                return CodeLines.naive(src, dest)
+
+    TsExporter.handlers.append(LiteralHandler())
+else:
+    pass

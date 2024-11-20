@@ -22,6 +22,10 @@ from .base import check_ts, dumb_rpc_cls, rpc_async_cls, rpc_cls
 
 SUPPORTS_NEW_UNION = sys.version_info[0:2] > (3, 9)
 SUPPORTS_LIST_GENERIC = sys.version_info[0:2] >= (3, 9)
+SUPPORTS_LITERAL = sys.version_info[0:2] >= (3, 8)
+
+if SUPPORTS_LITERAL:
+    from typing import Literal
 
 
 def test_export_types_to_ts(rpc_cls):
@@ -60,6 +64,12 @@ def test_export_types_to_ts(rpc_cls):
         (List[Model2[List[Model1]]], "Array<Model2<Array<Model1>>>"),
     ]:
         assert exporter.root_type_to_interface(type_) == expected
+
+    if SUPPORTS_LITERAL:
+        assert (
+            exporter.root_type_to_interface(Literal["abc", "cde"])
+            == '"abc" | "cde"'
+        )
 
     assert (
         exporter.name_to_interface_def["Model1"]
@@ -102,6 +112,7 @@ def test_complex_export_ts(rpc_cls):
         created: (
             (datetime | None) if SUPPORTS_NEW_UNION else Optional[datetime]
         )
+        type_: Literal["u", "p"] if SUPPORTS_LITERAL else str = "u"
         start_dts: List[date]
         start_dts2: Tuple[date, int]
         start_dts3: Tuple[date, ...]
@@ -130,6 +141,7 @@ def test_complex_export_ts(rpc_cls):
         uid: str
         tags: List[Tag[int]]
         other_tags: List[Tag[date]]
+        type_: Literal["u", "p"] if SUPPORTS_LITERAL else str = "u"
 
     class GetUser(AbstractProcedure):
         def call(self, in_: Tuple[UserParams], context) -> List[UserDetails]:
