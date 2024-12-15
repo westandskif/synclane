@@ -1,3 +1,7 @@
+## 0.6.1 (2024-12-15)
+
+ - turned functions to arrow functions in the generated ts client
+
 ## 0.6.0 (2024-11-20)
 
  - added support for python's typing.Literal

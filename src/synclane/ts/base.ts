@@ -1,19 +1,19 @@
 const ANY_DATE: Date = new Date();
 const TIMEZONE_OFFSET_IN_MS: number = ANY_DATE.getTimezoneOffset() * 60000;
 
-export function strToDate(d: string): Date {
+export const strToDate = (d: string): Date => {
     let dt = new Date(d);
     return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
 }
-export function dateToStr(d: Date): string {
+export const dateToStr = (d: Date): string => {
     return new Date(d.getTime() - TIMEZONE_OFFSET_IN_MS)
         .toISOString()
         .split("T")[0];
 }
-export function setHeaders(
+export const setHeaders = (
     headersInit: HeadersInit,
     headersToSet: Record<string, string>,
-) {
+) => {
     let headers = headersInit;
     if (headers === undefined) {
         headers = headersToSet;
@@ -49,10 +49,10 @@ export class AbortableRequest<T> {
     }
 }
 let REQUEST_COUNTER = 1;
-function fetchAndPrepare<U>(
+const fetchAndPrepare = <U>(
     init: RequestInit,
     primitiveToResult: (data: any) => U,
-): Promise<U> {
+): Promise<U> => {
     return new Promise((resolve, reject) => {
         if (rpcConfig.url === undefined) {
             return reject("rpcConfig.url is not initialized");
@@ -76,12 +76,12 @@ function fetchAndPrepare<U>(
             );
     });
 }
-export function abortableFetch<T, U>(
+export const abortableFetch = <T, U>(
     method: string,
     params: T,
     paramsToPrimitive: (params: T) => any,
     primitiveToResult: (data: any) => U,
-): AbortableRequest<U> {
+): AbortableRequest<U> => {
     let controller = new AbortController();
     let headers = new Headers();
     headers.set("Accept", "application/json");

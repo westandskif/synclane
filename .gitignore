@@ -8,3 +8,4 @@ tags
 dist/
 node_modules/
 tests/int_tst/src
+.envrc

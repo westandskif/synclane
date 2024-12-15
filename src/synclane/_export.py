@@ -141,7 +141,7 @@ class BaseTsExporter:
             out_type_def = self.root_type_to_interface(procedure.out_type)
 
             prepare_params_defs[ts_name] = (
-                """function _%(ts_name)sParamsToPrimitive(params: %(in_type_def)s): any {
+                """const _%(ts_name)sParamsToPrimitive = (params: %(in_type_def)s): any => {
 let preparedParams: any;
 %(ts_to_primitive_code)s
 return preparedParams;
@@ -156,7 +156,7 @@ return preparedParams;
                 }
             )
             prepare_result_defs[ts_name] = (
-                """function _%(ts_name)sPrimitiveToResult(data: any): %(out_type_def)s {
+                """const _%(ts_name)sPrimitiveToResult = (data: any): %(out_type_def)s => {
 %(primitive_to_ts_code)s
 return data;
 }"""
@@ -171,7 +171,7 @@ return data;
             )
 
             function_defs.append(
-                """export function call%(ts_name)s(params: %(in_type_def)s): AbortableRequest<%(out_type_def)s> {
+                """export const call%(ts_name)s = (params: %(in_type_def)s): AbortableRequest<%(out_type_def)s> => {
     return abortableFetch<%(in_type_def)s, %(out_type_def)s>("%(ts_name)s", params, _%(ts_name)sParamsToPrimitive, _%(ts_name)sPrimitiveToResult);
 }"""
                 % {
