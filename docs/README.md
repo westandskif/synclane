@@ -47,7 +47,7 @@ python's `date` and `datetime`.
 
 Hence when you pass `2000-01-01` to a browser in New York, the browser will
 read it as UTC datetime and then convert it to the local timezone, so it will
-give you Dec 31, 1991 7:00PM, which is fine if you wanted to work with a
+give you Dec 31, 1999 7:00PM, which is fine if you wanted to work with a
 particular moment in time, but what if you wanted to display someone's date of
 birth? That's why lacking date type is a problem.
 
